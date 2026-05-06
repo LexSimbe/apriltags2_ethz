@@ -114,7 +114,7 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
              [color.rgb.green,
               deco.earrow([deco.stroked([color.rgb.green, style.linejoin.round]),
               deco.filled([color.rgb.green])], size=tagSize*0.10)])
-    canvas.text(pos[0], pos[1]+tagSize*0.3, "y", [text_size])
+    canvas.text(pos[0]+tagSize*0.05, pos[1]+tagSize*0.3, "y", [text_size])
 
     #text
     caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
@@ -192,16 +192,22 @@ if __name__ == "__main__":
     #write to file
     bb = c.bbox()
     left_cm = unit.tocm(bb.left())
+    right_cm = unit.tocm(bb.right())
+    top_cm = unit.tocm(bb.top())
     bottom_cm = unit.tocm(bb.bottom())
     w_cm = unit.tocm(bb.right() - bb.left())
     h_cm = unit.tocm(bb.top() - bb.bottom())
 
     paper_h_cm = 300
     paper_w_cm = 150
-    
-    y_offset_cm = (paper_h_cm - h_cm) / 2 - bottom_cm  # center vertically
+
+    x_offset_cm = paper_w_cm - 1 - right_cm   # 1cm right margin
+    y_offset_cm = paper_h_cm - 1 - top_cm      # 1cm top margin
+    # print("Bounding box: left={0}cm, right={1}cm, top={2}cm, bottom={3}cm".format(left_cm, right_cm, top_cm, bottom_cm))
+    # print("Paper size: {0}cm x {1}cm".format(paper_w_cm, paper_h_cm))
+    # print("Offsets: x={0}cm, y={1}cm".format(x_offset_cm, y_offset_cm))
     outer = canvas.canvas()
-    outer.insert(c, [trafo.translate(-left_cm, y_offset_cm)])
+    outer.insert(c, [trafo.translate(x_offset_cm, y_offset_cm)])
 
     paper = document.paperformat(paper_w_cm * unit.cm, paper_h_cm * unit.cm)
     doc = document.document([document.page(outer, paperformat=paper, centered=False)])
