@@ -78,10 +78,10 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
             c.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
 
 #tagSpaceing in % of tagSize
-def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11"):
-    
+def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", shift=0):
+
     if(tagSpacing<0 or tagSpacing>1.0):
-        print "[ERROR]: Invalid tagSpacing specified.  [0-1.0] of tagSize"
+        print("[ERROR]: Invalid tagSpacing specified.  [0-1.0] of tagSize")
         sys.exit(0)
         
     #convert to cm
@@ -96,7 +96,7 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
     #draw tags
     for y in range(0,n_rows):
         for x in range(0,n_cols):
-            id = n_cols * y + x
+            id = n_cols * y + x + shift
             pos = ( x*(1+tagSpacing)*tagSize, y*(1+tagSpacing)*tagSize)
             generateAprilTag(canvas, pos, tagSize, tagSpacing, id, tagFamililyData, rotation=2)
             #c.text(pos[0]+0.45*tagSize, pos[1]-0.7*tagSize*tagSpacing, "{0}".format(id))
@@ -126,7 +126,7 @@ def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows):
     size_rows = size_rows*100.0
     
     #message
-    print "Generating a checkerboard with {0}x{1} corners and a box size of {2}x{3} cm".format(n_cols,n_rows,size_cols,size_rows)
+    print("Generating a checkerboard with {0}x{1} corners and a box size of {2}x{3} cm".format(n_cols,n_rows,size_cols,size_rows))
     
     #draw boxes
     for x in range(0,n_cols+1):
@@ -161,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('--csx', type=float, default=0.03, dest='chessSzX', help='The size of one chessboard square in x direction [m] (default: %(default)s)')
     parser.add_argument('--csy', type=float, default=0.03, dest='chessSzY', help='The size of one chessboard square in y direction [m] (default: %(default)s)')
     
+    parser.add_argument('--shift', type=int, default=0, dest='shift', help='Tag ID offset (default: %(default)s)')
     parser.add_argument('--eps', action='store_true', dest='do_eps', help='Also output an EPS file', required=False)
 
     #Parser the argument list
@@ -171,16 +172,22 @@ if __name__ == "__main__":
  
     #open a new canvas
     c = canvas.canvas()
-    
+
     #draw the board
     if parsed.gridType == "apriltag":
-        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy)
+        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, parsed.shift)
+        if parsed.output == "target":
+            parsed.output = "board_{0}x{1}_{2}m_{3}pct_{4}".format(
+                parsed.n_cols, parsed.n_rows, parsed.tsize, int(parsed.tagspacing * 100), parsed.shift)
     elif parsed.gridType == "checkerboard":
         generateCheckerboard(c, parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY)
+        if parsed.output == "target":
+            parsed.output = "checkerboard_{0}x{1}_{2}mx{3}m".format(
+                parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY)
     else:
-        print "[ERROR]: Unknown grid pattern"
+        print("[ERROR]: Unknown grid pattern")
         sys.exit(0)
-            
+
     #write to file
     c.writePDFfile(parsed.output)
     

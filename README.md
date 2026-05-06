@@ -2,6 +2,15 @@
 Shameless copy of the apriltags code from https://github.com/ethz-asl/kalibr with a new pybind11 wrapper.
 Tested only on `linux`.
 
+# Installation from Source
+
+Install system dependencies first, then install the package:
+
+```bash
+sudo bash install_sys_dependencies.sh
+pip install -e .
+```
+
 # How to Use This: A Woefully Insufficient Guide
 To self educate, the `test.py` and `aprilgrid/__init__.py` files are good starting points. 
 Also check [here](https://github.com/safijari/apriltags2_ethz/blob/master/src/module.cpp#L38) to understand

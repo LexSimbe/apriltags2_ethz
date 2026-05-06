@@ -57,7 +57,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 
-version = 'dev'
+version = '0.0.0.dev0'
 
 commit_var = 'APPVEYOR_REPO_COMMIT'
 tag_name_var = 'APPVEYOR_REPO_TAG_NAME'
@@ -76,7 +76,8 @@ setup(
     ext_modules=[CMakeExtension('cmake_example')],
     install_requires=['pybind11>=2.2',
                       'numpy',
-                      'opencv-python'],
+                      'opencv-python',
+                      'pyx'],
     packages=['aprilgrid'],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
