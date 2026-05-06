@@ -2,7 +2,7 @@
 # Thomas Schneider, Sept 2013
 # Codes from AprilTags C++ Library (http://people.csail.mit.edu/kaess/apriltags/)
 
-from pyx import *
+from pyx import canvas, path, color, deco, style
 import argparse
 import sys
 
@@ -42,10 +42,10 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
     #borders (2x bit size)
     borderSize = borderBits*bitSquareSize
 
-    c.fill(path.rect(xPos, yPos, metricSize, borderSize),[color.rgb.black]) #bottom
-    c.fill(path.rect(xPos, yPos+metricSize-borderSize, metricSize, borderSize),[color.rgb.black]) #top
-    c.fill(path.rect(xPos+metricSize-borderSize, yPos, borderSize, metricSize),[color.rgb.black]) #left
-    c.fill(path.rect(xPos, yPos, borderSize, metricSize),[color.rgb.black]) #right
+    canvas.fill(path.rect(xPos, yPos, metricSize, borderSize),[color.rgb.black]) #bottom
+    canvas.fill(path.rect(xPos, yPos+metricSize-borderSize, metricSize, borderSize),[color.rgb.black]) #top
+    canvas.fill(path.rect(xPos+metricSize-borderSize, yPos, borderSize, metricSize),[color.rgb.black]) #left
+    canvas.fill(path.rect(xPos, yPos, borderSize, metricSize),[color.rgb.black]) #right
     
     #create numpy matrix of code
     codeMatrix = np.zeros((int(sqrtBits), int(sqrtBits)))
@@ -61,7 +61,7 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
     for i in range(0, int(sqrtBits)):
         for j in range(0, int(sqrtBits)):
             if codeMatrix[i,j]:
-                c.fill(path.rect(xPos+(j+borderBits)*bitSquareSize, yPos+((borderBits-1)+sqrtBits-i)*bitSquareSize, bitSquareSize, bitSquareSize),[color.rgb.black])
+                canvas.fill(path.rect(xPos+(j+borderBits)*bitSquareSize, yPos+((borderBits-1)+sqrtBits-i)*bitSquareSize, bitSquareSize, bitSquareSize),[color.rgb.black])
                 
     #add squares to make corners symmetric (decreases the effect of motion blur in the subpix refinement...)
     if symmCorners:
@@ -75,7 +75,7 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
                   ]
         
         for point in corners:
-            c.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
+            canvas.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
 
 #tagSpaceing in % of tagSize
 def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", shift=0):
@@ -103,21 +103,21 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
     
     #draw axis
     pos = ( -1.5*tagSpacing*tagSize, -1.5*tagSpacing*tagSize)
-    c.stroke(path.line(pos[0], pos[1], pos[0]+tagSize*0.3, pos[1]),
+    canvas.stroke(path.line(pos[0], pos[1], pos[0]+tagSize*0.3, pos[1]),
              [color.rgb.red,
               deco.earrow([deco.stroked([color.rgb.red, style.linejoin.round]),
               deco.filled([color.rgb.red])], size=tagSize*0.10)])
-    c.text(pos[0]+tagSize*0.3, pos[1], "x")
-    
-    c.stroke(path.line(pos[0], pos[1], pos[0], pos[1]+tagSize*0.3),
+    canvas.text(pos[0]+tagSize*0.3, pos[1], "x")
+
+    canvas.stroke(path.line(pos[0], pos[1], pos[0], pos[1]+tagSize*0.3),
              [color.rgb.green,
               deco.earrow([deco.stroked([color.rgb.green, style.linejoin.round]),
               deco.filled([color.rgb.green])], size=tagSize*0.10)])
-    c.text(pos[0], pos[1]+tagSize*0.3, "y")
+    canvas.text(pos[0], pos[1]+tagSize*0.3, "y")
 
     #text
     caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
-    c.text(pos[0]+0.6*tagSize, pos[0], caption)
+    canvas.text(pos[0]+0.6*tagSize, pos[0], caption)
 
 
 def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows):
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
     #draw the board
     if parsed.gridType == "apriltag":
-        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, parsed.shift)
+        generateAprilBoard(c, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, parsed.shift)
         if parsed.output == "target":
             parsed.output = "board_{0}x{1}_{2}m_{3}pct_{4}".format(
                 parsed.n_cols, parsed.n_rows, parsed.tsize, int(parsed.tagspacing * 100), parsed.shift)
