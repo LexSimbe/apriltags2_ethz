@@ -2,7 +2,7 @@
 # Thomas Schneider, Sept 2013
 # Codes from AprilTags C++ Library (http://people.csail.mit.edu/kaess/apriltags/)
 
-from pyx import *
+from pyx import canvas, path, color, deco, style, text, document, unit, trafo
 import argparse
 import sys
 
@@ -42,10 +42,10 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
     #borders (2x bit size)
     borderSize = borderBits*bitSquareSize
 
-    c.fill(path.rect(xPos, yPos, metricSize, borderSize),[color.rgb.black]) #bottom
-    c.fill(path.rect(xPos, yPos+metricSize-borderSize, metricSize, borderSize),[color.rgb.black]) #top
-    c.fill(path.rect(xPos+metricSize-borderSize, yPos, borderSize, metricSize),[color.rgb.black]) #left
-    c.fill(path.rect(xPos, yPos, borderSize, metricSize),[color.rgb.black]) #right
+    canvas.fill(path.rect(xPos, yPos, metricSize, borderSize),[color.rgb.black]) #bottom
+    canvas.fill(path.rect(xPos, yPos+metricSize-borderSize, metricSize, borderSize),[color.rgb.black]) #top
+    canvas.fill(path.rect(xPos+metricSize-borderSize, yPos, borderSize, metricSize),[color.rgb.black]) #left
+    canvas.fill(path.rect(xPos, yPos, borderSize, metricSize),[color.rgb.black]) #right
     
     #create numpy matrix of code
     codeMatrix = np.zeros((int(sqrtBits), int(sqrtBits)))
@@ -61,7 +61,7 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
     for i in range(0, int(sqrtBits)):
         for j in range(0, int(sqrtBits)):
             if codeMatrix[i,j]:
-                c.fill(path.rect(xPos+(j+borderBits)*bitSquareSize, yPos+((borderBits-1)+sqrtBits-i)*bitSquareSize, bitSquareSize, bitSquareSize),[color.rgb.black])
+                canvas.fill(path.rect(xPos+(j+borderBits)*bitSquareSize, yPos+((borderBits-1)+sqrtBits-i)*bitSquareSize, bitSquareSize, bitSquareSize),[color.rgb.black])
                 
     #add squares to make corners symmetric (decreases the effect of motion blur in the subpix refinement...)
     if symmCorners:
@@ -75,13 +75,13 @@ def generateAprilTag(canvas, position, metricSize, tagSpacing, tagID, tagFamilil
                   ]
         
         for point in corners:
-            c.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
+            canvas.fill(path.rect(point[0], point[1], metricSquareSize, metricSquareSize),[color.rgb.black])
 
 #tagSpaceing in % of tagSize
-def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11"):
-    
+def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFamilily="t36h11", shift=0):
+
     if(tagSpacing<0 or tagSpacing>1.0):
-        print "[ERROR]: Invalid tagSpacing specified.  [0-1.0] of tagSize"
+        print("[ERROR]: Invalid tagSpacing specified.  [0-1.0] of tagSize")
         sys.exit(0)
         
     #convert to cm
@@ -96,28 +96,29 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
     #draw tags
     for y in range(0,n_rows):
         for x in range(0,n_cols):
-            id = n_cols * y + x
+            id = n_cols * y + x + shift
             pos = ( x*(1+tagSpacing)*tagSize, y*(1+tagSpacing)*tagSize)
             generateAprilTag(canvas, pos, tagSize, tagSpacing, id, tagFamililyData, rotation=2)
             #c.text(pos[0]+0.45*tagSize, pos[1]-0.7*tagSize*tagSpacing, "{0}".format(id))
     
     #draw axis
+    text_size = text.size(5)
     pos = ( -1.5*tagSpacing*tagSize, -1.5*tagSpacing*tagSize)
-    c.stroke(path.line(pos[0], pos[1], pos[0]+tagSize*0.3, pos[1]),
+    canvas.stroke(path.line(pos[0], pos[1], pos[0]+tagSize*0.3, pos[1]),
              [color.rgb.red,
               deco.earrow([deco.stroked([color.rgb.red, style.linejoin.round]),
               deco.filled([color.rgb.red])], size=tagSize*0.10)])
-    c.text(pos[0]+tagSize*0.3, pos[1], "x")
-    
-    c.stroke(path.line(pos[0], pos[1], pos[0], pos[1]+tagSize*0.3),
+    canvas.text(pos[0]+tagSize*0.3, pos[1], "x", [text_size])
+
+    canvas.stroke(path.line(pos[0], pos[1], pos[0], pos[1]+tagSize*0.3),
              [color.rgb.green,
               deco.earrow([deco.stroked([color.rgb.green, style.linejoin.round]),
               deco.filled([color.rgb.green])], size=tagSize*0.10)])
-    c.text(pos[0], pos[1]+tagSize*0.3, "y")
+    canvas.text(pos[0]+tagSize*0.05, pos[1]+tagSize*0.3, "y", [text_size])
 
     #text
-    caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
-    c.text(pos[0]+0.6*tagSize, pos[0], caption)
+    caption = "{0}x{1} tags, size={2}cm and spacing={3}cm, shift={4}".format(n_cols,n_rows,tagSize,tagSpacing*tagSize,shift)
+    canvas.text(pos[0]+0.6*tagSize, pos[0], caption, [text_size])
 
 
 def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows):
@@ -126,7 +127,7 @@ def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows):
     size_rows = size_rows*100.0
     
     #message
-    print "Generating a checkerboard with {0}x{1} corners and a box size of {2}x{3} cm".format(n_cols,n_rows,size_cols,size_rows)
+    print("Generating a checkerboard with {0}x{1} corners and a box size of {2}x{3} cm".format(n_cols,n_rows,size_cols,size_rows))
     
     #draw boxes
     for x in range(0,n_cols+1):
@@ -161,6 +162,7 @@ if __name__ == "__main__":
     parser.add_argument('--csx', type=float, default=0.03, dest='chessSzX', help='The size of one chessboard square in x direction [m] (default: %(default)s)')
     parser.add_argument('--csy', type=float, default=0.03, dest='chessSzY', help='The size of one chessboard square in y direction [m] (default: %(default)s)')
     
+    parser.add_argument('--shift', type=int, default=0, dest='shift', help='Tag ID offset (default: %(default)s)')
     parser.add_argument('--eps', action='store_true', dest='do_eps', help='Also output an EPS file', required=False)
 
     #Parser the argument list
@@ -171,24 +173,45 @@ if __name__ == "__main__":
  
     #open a new canvas
     c = canvas.canvas()
-    
+
     #draw the board
     if parsed.gridType == "apriltag":
-        generateAprilBoard(canvas, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy)
+        generateAprilBoard(c, parsed.n_cols, parsed.n_rows, parsed.tsize, parsed.tagspacing, parsed.tagfamiliy, parsed.shift)
+        if parsed.output == "target":
+            parsed.output = "board_{0}x{1}_{2}m_{3}pct_{4}".format(
+                parsed.n_cols, parsed.n_rows, parsed.tsize, int(parsed.tagspacing * 100), parsed.shift)
     elif parsed.gridType == "checkerboard":
         generateCheckerboard(c, parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY)
+        if parsed.output == "target":
+            parsed.output = "checkerboard_{0}x{1}_{2}mx{3}m".format(
+                parsed.n_cols, parsed.n_rows, parsed.chessSzX, parsed.chessSzY)
     else:
-        print "[ERROR]: Unknown grid pattern"
+        print("[ERROR]: Unknown grid pattern")
         sys.exit(0)
-            
+
     #write to file
-    c.writePDFfile(parsed.output)
-    
+    bb = c.bbox()
+    left_cm = unit.tocm(bb.left())
+    right_cm = unit.tocm(bb.right())
+    top_cm = unit.tocm(bb.top())
+    bottom_cm = unit.tocm(bb.bottom())
+    w_cm = unit.tocm(bb.right() - bb.left())
+    h_cm = unit.tocm(bb.top() - bb.bottom())
+
+    paper_h_cm = 300
+    paper_w_cm = 150
+
+    x_offset_cm = paper_w_cm - 1 - right_cm   # 1cm right margin
+    y_offset_cm = paper_h_cm - 1 - top_cm      # 1cm top margin
+    # print("Bounding box: left={0}cm, right={1}cm, top={2}cm, bottom={3}cm".format(left_cm, right_cm, top_cm, bottom_cm))
+    # print("Paper size: {0}cm x {1}cm".format(paper_w_cm, paper_h_cm))
+    # print("Offsets: x={0}cm, y={1}cm".format(x_offset_cm, y_offset_cm))
+    outer = canvas.canvas()
+    outer.insert(c, [trafo.translate(x_offset_cm, y_offset_cm)])
+
+    paper = document.paperformat(paper_w_cm * unit.cm, paper_h_cm * unit.cm)
+    doc = document.document([document.page(outer, paperformat=paper, centered=False)])
+    doc.writePDFfile(parsed.output)
+
     if parsed.do_eps:
         c.writeEPSfile(parsed.output)
-    
-    os.system("evince " + parsed.output + ".pdf &")
-        
-    
-
-    
