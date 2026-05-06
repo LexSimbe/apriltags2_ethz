@@ -2,7 +2,7 @@
 # Thomas Schneider, Sept 2013
 # Codes from AprilTags C++ Library (http://people.csail.mit.edu/kaess/apriltags/)
 
-from pyx import canvas, path, color, deco, style
+from pyx import canvas, path, color, deco, style, text, document, unit, trafo
 import argparse
 import sys
 
@@ -102,22 +102,23 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
             #c.text(pos[0]+0.45*tagSize, pos[1]-0.7*tagSize*tagSpacing, "{0}".format(id))
     
     #draw axis
+    text_size = text.size(5)
     pos = ( -1.5*tagSpacing*tagSize, -1.5*tagSpacing*tagSize)
     canvas.stroke(path.line(pos[0], pos[1], pos[0]+tagSize*0.3, pos[1]),
              [color.rgb.red,
               deco.earrow([deco.stroked([color.rgb.red, style.linejoin.round]),
               deco.filled([color.rgb.red])], size=tagSize*0.10)])
-    canvas.text(pos[0]+tagSize*0.3, pos[1], "x")
+    canvas.text(pos[0]+tagSize*0.3, pos[1], "x", [text_size])
 
     canvas.stroke(path.line(pos[0], pos[1], pos[0], pos[1]+tagSize*0.3),
              [color.rgb.green,
               deco.earrow([deco.stroked([color.rgb.green, style.linejoin.round]),
               deco.filled([color.rgb.green])], size=tagSize*0.10)])
-    canvas.text(pos[0], pos[1]+tagSize*0.3, "y")
+    canvas.text(pos[0], pos[1]+tagSize*0.3, "y", [text_size])
 
     #text
     caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
-    canvas.text(pos[0]+0.6*tagSize, pos[0], caption)
+    canvas.text(pos[0]+0.6*tagSize, pos[0], caption, [text_size])
 
 
 def generateCheckerboard(canvas, n_cols, n_rows, size_cols, size_rows):
@@ -189,13 +190,22 @@ if __name__ == "__main__":
         sys.exit(0)
 
     #write to file
-    c.writePDFfile(parsed.output)
+    bb = c.bbox()
+    left_cm = unit.tocm(bb.left())
+    bottom_cm = unit.tocm(bb.bottom())
+    w_cm = unit.tocm(bb.right() - bb.left())
+    h_cm = unit.tocm(bb.top() - bb.bottom())
+
+    paper_h_cm = 300
+    paper_w_cm = 150
     
+    y_offset_cm = (paper_h_cm - h_cm) / 2 - bottom_cm  # center vertically
+    outer = canvas.canvas()
+    outer.insert(c, [trafo.translate(-left_cm, y_offset_cm)])
+
+    paper = document.paperformat(paper_w_cm * unit.cm, paper_h_cm * unit.cm)
+    doc = document.document([document.page(outer, paperformat=paper, centered=False)])
+    doc.writePDFfile(parsed.output)
+
     if parsed.do_eps:
         c.writeEPSfile(parsed.output)
-    
-    os.system("evince " + parsed.output + ".pdf &")
-        
-    
-
-    
