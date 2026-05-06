@@ -117,7 +117,7 @@ def generateAprilBoard(canvas, n_cols, n_rows, tagSize, tagSpacing=0.25, tagFami
     canvas.text(pos[0]+tagSize*0.05, pos[1]+tagSize*0.3, "y", [text_size])
 
     #text
-    caption = "{0}x{1} tags, size={2}cm and spacing={3}cm".format(n_cols,n_rows,tagSize,tagSpacing*tagSize)
+    caption = "{0}x{1} tags, size={2}cm and spacing={3}cm, shift={4}".format(n_cols,n_rows,tagSize,tagSpacing*tagSize,shift)
     canvas.text(pos[0]+0.6*tagSize, pos[0], caption, [text_size])
 
 
